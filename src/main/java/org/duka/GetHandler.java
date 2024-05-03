@@ -1,6 +1,7 @@
 package org.duka;
 
-import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -11,18 +12,34 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
-
 import static org.duka.DatabaseConnection.createConnection;
 
-public class GetProducts {
-//STEP 3 - GET  API
-//runs the sql query and returns the results in json
-static HttpServer serverConnection;
-    GetProducts(HttpServer serverConnection){
-        this.serverConnection = serverConnection;
+public class GetHandler implements HttpHandler {
 
+
+    public GetHandler() {
+        // No need for explicit initialization here if no parameters are required
     }
+
+    public void handle(HttpExchange exchange) throws IOException {
+        // Your handling logic goes here
+
+        if ("GET".equals(exchange.getRequestMethod())){
+            String dummyText = processQuery ();
+            exchange.sendResponseHeaders(200, dummyText.getBytes().length);
+            OutputStream output = exchange.getResponseBody();
+            output.write(dummyText.getBytes());
+            output.flush();
+            exchange.close();
+
+        }else{
+            exchange.sendResponseHeaders(405, -1);// 405 Method Not Allowed
+
+        }
+        exchange.close();
+    }
+
+
     public static String processQuery (){
         String result = "";
         Connection conn = createConnection();
@@ -67,37 +84,4 @@ static HttpServer serverConnection;
 
 
     }
-
-//sends the results to the endpoint
-    public static void request (){
-//        HttpServer serverConnection;
-
-        {
-            //                serverConnection = Server.getServer();
-
-            serverConnection.createContext("/products", (exchange -> {
-
-                if ("GET".equals(exchange.getRequestMethod())){
-                    String dummyText = processQuery ();
-                    exchange.sendResponseHeaders(200, dummyText.getBytes().length);
-                    OutputStream output = exchange.getResponseBody();
-                    output.write(dummyText.getBytes());
-                    output.flush();
-                    exchange.close();
-
-                }else{
-                    exchange.sendResponseHeaders(405, -1);// 405 Method Not Allowed
-
-                }
-                exchange.close();
-
-            }));
-            serverConnection.setExecutor(null); // creates a default executor
-            serverConnection.start();
-        }
-
-    }
-
-
-
 }
